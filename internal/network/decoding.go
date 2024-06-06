@@ -24,7 +24,7 @@ func Decode(r io.Reader) (*protocol.Message, error) {
 
 	// check msg type
 	msgType := headersBuf[0]
-	if msgType > 1 {
+	if msgType > 4 {
 		return nil, errors.New("unknown message type")
 	}
 
@@ -57,7 +57,7 @@ func Decode(r io.Reader) (*protocol.Message, error) {
 		}, nil
 	}
 
-    if protocolMsgType == protocol.MsgGetFileRes {
+	if protocolMsgType == protocol.MsgGetFileRes {
 		var pload protocol.GetFileResPayload
 		decoder := json.NewDecoder(bytes.NewReader(payload))
 		err = decoder.Decode(&pload)
@@ -69,7 +69,35 @@ func Decode(r io.Reader) (*protocol.Message, error) {
 			MsgType: protocolMsgType,
 			Payload: pload,
 		}, nil
-    }
+	}
+
+	if protocolMsgType == protocol.MsgSaveFile {
+		var pload protocol.SaveFileReqPayload
+		decoder := json.NewDecoder(bytes.NewReader(payload))
+		err = decoder.Decode(&pload)
+		if err != nil {
+			return nil, err
+		}
+
+		return &protocol.Message{
+			MsgType: protocolMsgType,
+			Payload: pload,
+		}, nil
+	}
+
+	if protocolMsgType == protocol.MsgSaveFileRes {
+		var pload protocol.SaveFileResPayload
+		decoder := json.NewDecoder(bytes.NewReader(payload))
+		err = decoder.Decode(&pload)
+		if err != nil {
+			return nil, err
+		}
+
+		return &protocol.Message{
+			MsgType: protocolMsgType,
+			Payload: pload,
+		}, nil
+	}
 
 	return nil, errors.New("unknown payload / not implemented yet")
 }

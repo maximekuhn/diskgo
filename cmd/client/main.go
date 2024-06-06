@@ -5,6 +5,7 @@ import (
 	"net/netip"
 
 	"github.com/maximekuhn/diskgo/internal/client"
+	"github.com/maximekuhn/diskgo/internal/file"
 	"github.com/maximekuhn/diskgo/internal/network"
 )
 
@@ -23,6 +24,11 @@ func main() {
 	c.AddPeer(network.NewPeer("toto", addrPort), filename)
 
 	err = c.GetFile(filename)
+	if err != nil {
+		panic(err)
+	}
+
+	err = c.SaveFile(file.NewFile(filename, []byte{1, 2, 3}))
 	if err != nil {
 		panic(err)
 	}

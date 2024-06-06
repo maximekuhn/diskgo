@@ -7,14 +7,14 @@ import (
 )
 
 var (
-    ErrFileNotFound = errors.New("file not found")
+	ErrFileNotFound = errors.New("file not found")
 )
 
 type FileStore interface {
-    // save the given file
-    Save(*file.File) error
+	// save the given file
+	Save(*file.File) error
 
-    // get the given file by name
-    // If the file is not found, an error is returned
-    Get(string) (*file.File, error)
+	// get the given file by name
+	// If the file is not found, an error is returned
+	Get(string) (*file.File, error)
 }

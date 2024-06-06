@@ -4,7 +4,10 @@ type MsgType byte
 
 const (
 	MsgGetFile MsgType = iota
-    MsgGetFileRes
+	MsgGetFileRes
+
+	MsgSaveFile
+	MsgSaveFileRes
 )
 
 type Message struct {

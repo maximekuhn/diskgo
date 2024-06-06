@@ -75,32 +75,27 @@ func (s *Server) handleConn(conn net.Conn) {
 		return
 	}
 
-	var encodedMsg []byte
-	var encodeErr error
-
 	if msg.MsgType == protocol.MsgGetFile {
 		slog.Info("received a MsgGetFile request")
 
-		payload, err := handlers.HandleGetFile(msg, s.store)
+		err := handlers.HandleGetFile(msg, s.store, conn)
 		if err != nil {
-			slog.Error("failed to retrieve file", slog.String("err_msg", err.Error()))
+			slog.Error("failed to handle request", slog.String("err_msg", err.Error()))
 			return
 		}
-
-		encodedMsg, encodeErr = network.Encode(protocol.MsgGetFileRes, payload)
 	}
 
-	if encodeErr != nil {
-		slog.Error("failed to encode message", slog.String("err_msg", encodeErr.Error()))
-		return
+	if msg.MsgType == protocol.MsgSaveFile {
+		slog.Info("received a MsgSaveFile request")
+
+		err := handlers.HandleSaveFile(msg, s.store, conn)
+		if err != nil {
+			slog.Error("failed to handle request", slog.String("err_msg", err.Error()))
+			return
+		}
 	}
 
-	// TODO: handle n write
-	_, err = conn.Write(encodedMsg)
-	if err != nil {
-		slog.Error("failed to write response", slog.String("err_msg", err.Error()))
-		return
-	}
+	slog.Info("successfully handled request")
 }
 
 func acceptConnLoop(l net.Listener, connCh chan<- net.Conn) {

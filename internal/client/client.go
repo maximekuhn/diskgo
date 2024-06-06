@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/maximekuhn/diskgo/internal/file"
 	"github.com/maximekuhn/diskgo/internal/network"
 	"github.com/maximekuhn/diskgo/internal/protocol"
 )
@@ -12,11 +13,13 @@ import (
 type Client struct {
 	// file name -> peers
 	myFiles map[string][]*network.Peer
+	peers   []*network.Peer
 }
 
 func NewClient() *Client {
 	return &Client{
 		myFiles: make(map[string][]*network.Peer),
+		peers:   make([]*network.Peer, 0),
 	}
 }
 
@@ -30,6 +33,7 @@ func (c *Client) AddPeer(p *network.Peer, filename string) {
 
 	fp = append(fp, p)
 	c.myFiles[filename] = fp
+	c.peers = append(c.peers, p)
 }
 
 func (c *Client) GetFile(filename string) error {
@@ -38,7 +42,7 @@ func (c *Client) GetFile(filename string) error {
 		return errors.New("no peers has this file")
 	}
 	if len(peers) == 0 {
-		return errors.New("no peers has this file (here)")
+		return errors.New("no peers has this file")
 	}
 
 	// TODO: ask a random peer
@@ -82,10 +86,62 @@ func (c *Client) GetFile(filename string) error {
 		return errors.New("invalid payload")
 	}
 
-	if res.Ok {
+	if !res.Ok {
 		fmt.Println("the peer doesn't have the file :(")
 	} else {
 		fmt.Printf("received file %s\ndata: %v\n", res.File.Name, res.File.Data)
+	}
+
+	return nil
+}
+
+func (c *Client) SaveFile(f *file.File) error {
+	// TODO: choose a random peer
+	if len(c.peers) == 0 {
+		return errors.New("no peers known")
+	}
+	peer := c.peers[0]
+
+	// create request
+	req := protocol.SaveFileReqPayload{
+		File: *f,
+	}
+	encodedMsg, err := network.Encode(protocol.MsgSaveFile, req)
+	if err != nil {
+		return err
+	}
+
+	// send request
+	addr := fmt.Sprintf("%s:%d", peer.Addr.Addr(), peer.Addr.Port())
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		return err
+	}
+
+	// TODO: handle n write
+	_, err = conn.Write(encodedMsg)
+	if err != nil {
+		return err
+	}
+
+	// wati for remote peer to respond
+	decodedMsg, err := network.Decode(conn)
+	if err != nil {
+		return err
+	}
+
+	if decodedMsg.MsgType != protocol.MsgSaveFileRes {
+		return errors.New("received a response but not the one expected")
+	}
+	res, ok := decodedMsg.Payload.(protocol.SaveFileResPayload)
+	if !ok {
+		return errors.New("invalid payload")
+	}
+
+	if res.Ok {
+		fmt.Println("peer successfully saved file")
+	} else {
+		fmt.Println("peer could not save file")
 	}
 
 	return nil
