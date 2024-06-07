@@ -1,7 +1,7 @@
 # diskgo
 
 TODO:
-- [ ] basic CI (fmt, lint, build, test, ...)
+- [x] basic CI (fmt, lint, build, test, ...)
 - [ ] mdns discovery for client
 - [ ] mdns announce for server
 - [ ] timeout handling (using contexts ?)

@@ -1,0 +1,82 @@
+# This workflow is responsible of:
+# - check if any linter warning/error is unhandled
+# - check if the code is correctly formatted
+# - check if the code builds
+# - check if all tests pass
+
+name: Golang CI Check
+
+on:
+  push:
+    branches:
+      - "**"
+
+# don't waste CI time by cancelling previous workflow on the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # check linter errors/warnings
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.59
+
+  # check if code is correctly formatted
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      
+      - name: Check format
+        run: |
+          n=$(make fmtCheck | wc -l)
+          if [[ "$n" -gt 1 ]]; then
+            exit 1
+          fi
+
+  # check if code builds
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, fmt]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Build code
+        run: make build
+
+  # check if all tests pass
+  test:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Run tests
+        run: make test
