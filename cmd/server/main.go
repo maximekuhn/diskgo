@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -24,6 +25,7 @@ func main() {
 	// start the server
 	s := server.NewServer(
 		server.WithListenPort(uint16(*port)),
+		server.WithListenAddr(net.IPv4(0, 0, 0, 0)),
 	)
 
 	stopCh := make(chan bool, 1)

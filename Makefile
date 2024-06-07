@@ -17,6 +17,9 @@ clean:
 lint:
 	golangci-lint run
 
+test:
+	go test -v ./...
+
 help:
 	@echo "Available targets"
 	@echo "\tfmtCheck         - Check if code is correctly formatted"
@@ -24,4 +27,5 @@ help:
 	@echo "\tbuild            - Build all binaries"
 	@echo "\tclean            - Clean up bin/ directory"
 	@echo "\tlint             - Run linter"
+	@echo "\ttest             - Run all tests"
 

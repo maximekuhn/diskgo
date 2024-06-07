@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/netip"
 
+	"github.com/maximekuhn/diskgo/cmd/client/cli"
 	"github.com/maximekuhn/diskgo/internal/client"
-	"github.com/maximekuhn/diskgo/internal/file"
 	"github.com/maximekuhn/diskgo/internal/network"
 )
 
@@ -14,24 +14,76 @@ func main() {
 
 	c := client.NewClient()
 
-	addrPort, err := netip.ParseAddrPort("127.0.0.1:9999")
-	if err != nil {
-		panic(err)
+	inputCh := make(chan string, 1)
+	go cli.ReadFromStdin(inputCh)
+
+	for {
+		fmt.Print("$ ")
+		input := <-inputCh
+		if input == "" {
+			continue
+		}
+
+		cmd, err := cli.ParseCommand(input)
+		if err != nil {
+			fmt.Printf("failed to parse command: %s\n", err)
+			continue
+		}
+
+		if cmd.CmdType == cli.CmdShowHelp {
+			fmt.Println(help())
+		}
+
+		if cmd.CmdType == cli.CmdExit {
+			fmt.Println("👋 bye")
+			return
+		}
+
+		if cmd.CmdType == cli.CmdSaveFile {
+			payload := cmd.Payload.(cli.PayloadSaveFile)
+			if err := c.SaveFile(payload.Path); err != nil {
+				fmt.Printf("failed to save file: %s\n", err)
+				continue
+			}
+			fmt.Println("saved file successfully")
+		}
+
+		if cmd.CmdType == cli.CmdAddPeer {
+			payload := cmd.Payload.(cli.PayloadAddPeer)
+			peerAddr, err := netip.ParseAddrPort(fmt.Sprintf("%s:%d", payload.Addr, payload.Port))
+			if err != nil {
+				fmt.Printf("provided peer address is not valid: %s\n", err)
+				continue
+			}
+
+			if err := c.AddPeer(network.NewPeer(payload.Name, peerAddr)); err != nil {
+				fmt.Printf("failed to add peer: %s\n", err)
+				continue
+			}
+			fmt.Println("added peer successfully")
+		}
+
+		if cmd.CmdType == cli.CmdGetFile {
+			payload := cmd.Payload.(cli.PayloadGetFile)
+			file, err := c.GetFile(payload.FileName)
+			if err != nil {
+				fmt.Printf("failed to get file: %s\n", err)
+				continue
+			}
+
+			fmt.Println("got file successfully")
+			fmt.Printf("name: %s, data: %v\n", file.Name, file.Data)
+		}
+
+		if cmd.CmdType == cli.CmdList {
+			files := c.ListFiles()
+			for filename, peersNames := range files {
+				fmt.Printf("%s -> %v\n", filename, peersNames)
+			}
+		}
+
 	}
 
-	filename := "readme.md"
-
-	c.AddPeer(network.NewPeer("toto", addrPort), filename)
-
-	err = c.GetFile(filename)
-	if err != nil {
-		panic(err)
-	}
-
-	err = c.SaveFile(file.NewFile(filename, []byte{1, 2, 3}))
-	if err != nil {
-		panic(err)
-	}
 }
 
 func banner() string {
@@ -40,5 +92,17 @@ func banner() string {
  | \  |  (_  |/  _   _  
  |_/ _|_ __) |\ (_| (_)  (client)
                  _|
+    type ` + "`" + `help` + "`" + ` to get the list of all available commands
+    `
+}
+
+func help() string {
+	return `
+        * save <file path>       - save a file (a random peer will be chosen)
+        * get <file name>        - retrieve a file from the peers network
+        * ls | list              - list all files saved in the peers network
+        * add <name> <IP> <port> - manually add a new peer
+        * help                   - show this menu
+        * quit | exit            - exit
     `
 }
