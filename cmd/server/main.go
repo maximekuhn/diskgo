@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/maximekuhn/diskgo/internal/server"
+	"github.com/maximekuhn/diskgo/internal/store"
 )
 
 func main() {
@@ -26,6 +27,7 @@ func main() {
 	s := server.NewServer(
 		server.WithListenPort(uint16(*port)),
 		server.WithListenAddr(net.IPv4(0, 0, 0, 0)),
+		server.WithFileStore(store.NewFsFileStore("./files")),
 	)
 
 	stopCh := make(chan bool, 1)
