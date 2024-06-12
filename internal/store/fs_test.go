@@ -203,3 +203,27 @@ func TestFsFileStore_EnoughDiskSpace(t *testing.T) {
 		t.Fatalf("failed to save file: %s", err)
 	}
 }
+
+func TestNewInMemoryFileStore_EnoughThenNotEnoughDiskSpace(t *testing.T) {
+	rootDir := t.TempDir()
+	sut := NewFsFileStore(rootDir, 1)
+
+	// try to save a file that is less 1 KB
+	f := file.NewFile("large_file.txt", make([]byte, 1023))
+
+	err := sut.Save(f, "toto")
+	if err != nil {
+		t.Fatalf("failed to save file: %s", err)
+	}
+
+	// try to save again a new file
+	f = file.NewFile("large_file2.txt", make([]byte, 1023))
+
+	err = sut.Save(f, "toto")
+	if err == nil {
+		t.Fatal("should have failed")
+	}
+	if !errors.Is(err, ErrNoMoreDiskSpace) {
+		t.Fatalf("expected ErrNoMoreDiskSpace, got %s", err)
+	}
+}
