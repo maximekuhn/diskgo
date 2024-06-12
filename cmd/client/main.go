@@ -23,7 +23,7 @@ func main() {
 	// start peers discovery
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	err := c.Start(ctx)
+	err := c.StartDiscovery(ctx)
 	if err != nil {
 		panic(err)
 	}

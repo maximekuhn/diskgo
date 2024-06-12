@@ -10,6 +10,7 @@ import (
 	"github.com/maximekuhn/diskgo/internal/store"
 	"log/slog"
 	"net"
+	"time"
 )
 
 type Server struct {
@@ -45,11 +46,19 @@ func (s *Server) Start(stopCh <-chan bool) error {
 
 	slog.Info("server started", slog.String("listen_addr", l.Addr().String()))
 
+	// this looks dirty and this might not even work correctly
 	if s.advertiser != nil {
 		ctx := context.Background()
 
-		// TODO: handle error
-		go s.advertiser.Advertise(ctx)
+		var startDiscoveryErr error
+		go func() {
+			startDiscoveryErr = s.advertiser.Advertise(ctx)
+		}()
+		time.Sleep(500 * time.Millisecond)
+
+		if startDiscoveryErr != nil {
+			return startDiscoveryErr
+		}
 	}
 
 	s.mainLoop(l, stopCh)
@@ -58,7 +67,9 @@ func (s *Server) Start(stopCh <-chan bool) error {
 }
 
 func (s *Server) mainLoop(l net.Listener, stopCh <-chan bool) {
-	defer l.Close()
+	defer func(l net.Listener) {
+		_ = l.Close()
+	}(l)
 
 	connCh := make(chan net.Conn)
 	go acceptConnLoop(l, connCh)
@@ -77,7 +88,9 @@ func (s *Server) mainLoop(l net.Listener, stopCh <-chan bool) {
 }
 
 func (s *Server) handleConn(conn net.Conn) {
-	defer conn.Close()
+	defer func(conn net.Conn) {
+		_ = conn.Close()
+	}(conn)
 
 	msg, err := network.Decode(conn)
 

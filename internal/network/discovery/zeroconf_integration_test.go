@@ -11,17 +11,15 @@ import (
 )
 
 func TestZeroConfBasic(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	peers := make(chan network.Peer)
+	peers := make(chan network.Peer, 1)
 	resolver := NewZeroconfResolver()
 	go func() {
 		if err := resolver.Resolve(ctx, peers); err != nil {
 			t.Errorf("failed to resolve zeroconf: %v", err)
 		}
-
-		close(peers)
 	}()
 
 	addr, err := netip.ParseAddrPort("192.168.1.18:8888")
@@ -35,20 +33,28 @@ func TestZeroConfBasic(t *testing.T) {
 			t.Errorf("failed to advertise: %v", err)
 		}
 	}()
-
 	<-ctx.Done()
 
 	// we should have discovered the server
-	discoveredPeers := make([]network.Peer, 0)
-	for peer := range peers {
-		discoveredPeers = append(discoveredPeers, peer)
+	ctx, cancel = context.WithTimeout(context.Background(), 500*time.Millisecond)
+	var discoveredPeer *network.Peer
+	defer cancel()
+	go func(ctx context.Context) {
+		for {
+			select {
+			case peer := <-peers:
+				discoveredPeer = &peer
+			case <-ctx.Done():
+				return
+			}
+		}
+	}(ctx)
+	<-ctx.Done()
+
+	if discoveredPeer == nil {
+		t.Errorf("failed to discover peer")
 	}
 
-	if len(discoveredPeers) < 1 {
-		t.Errorf("should have at least one discovered peer")
-	}
-
-	discoveredPeer := discoveredPeers[0]
 	actualName := discoveredPeer.Name
 	if nickname != actualName {
 		t.Errorf("wrong name got %s want %s", actualName, nickname)

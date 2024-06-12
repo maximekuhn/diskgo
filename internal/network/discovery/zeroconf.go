@@ -29,37 +29,43 @@ func (z *ZeroconfResolver) Resolve(ctx context.Context, peers chan<- network.Pee
 
 	entries := make(chan *zeroconf.ServiceEntry)
 	go func(results <-chan *zeroconf.ServiceEntry) {
-		for entry := range results {
-			texts := entry.Text
+		for {
+			select {
+			case entry := <-results:
+				texts := entry.Text
 
-			if len(texts) != 2 {
-				continue
-			}
+				if len(texts) != 2 {
+					continue
+				}
 
-			// first text should be nickname
-			nicknameText := texts[0]
-			if !strings.HasPrefix(nicknameText, "nickname=") {
-				continue
-			}
-			nickname := strings.TrimPrefix(nicknameText, "nickname=")
+				// first text should be nickname
+				nicknameText := texts[0]
+				if !strings.HasPrefix(nicknameText, "nickname=") {
+					continue
+				}
+				nickname := strings.TrimPrefix(nicknameText, "nickname=")
 
-			// second text should be addr
-			addrText := texts[1]
-			if !strings.HasPrefix(addrText, "addr=") {
-				continue
-			}
-			addr := strings.TrimPrefix(addrText, "addr=")
-			addrPort, err := netip.ParseAddrPort(addr)
-			if err != nil {
-				continue
-			}
+				// second text should be addr
+				addrText := texts[1]
+				if !strings.HasPrefix(addrText, "addr=") {
+					continue
+				}
+				addr := strings.TrimPrefix(addrText, "addr=")
+				addrPort, err := netip.ParseAddrPort(addr)
+				if err != nil {
+					continue
+				}
 
-			peer := network.Peer{
-				Name: nickname,
-				Addr: addrPort,
-			}
+				peer := network.Peer{
+					Name: nickname,
+					Addr: addrPort,
+				}
 
-			peers <- peer
+				peers <- peer
+
+			case <-ctx.Done():
+				return
+			}
 		}
 	}(entries)
 
@@ -68,7 +74,6 @@ func (z *ZeroconfResolver) Resolve(ctx context.Context, peers chan<- network.Pee
 		return err
 	}
 
-	<-ctx.Done()
 	return nil
 }
 

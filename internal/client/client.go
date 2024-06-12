@@ -41,20 +41,21 @@ func NewClient(opts ...ClientOpts) *Client {
 	return c
 }
 
-func (c *Client) Start(ctx context.Context) error {
+func (c *Client) StartDiscovery(ctx context.Context) error {
 	peers := make(chan network.Peer)
 	if c.resolver != nil {
-		// TODO: handle error
-		go c.resolver.Resolve(ctx, peers)
+		if err := c.resolver.Resolve(ctx, peers); err != nil {
+			return err
+		}
 
 		go func(ctx context.Context, c *Client) {
 			for {
 				select {
 				case peer := <-peers:
-					fmt.Printf("discovered %s at %s\n", peer.Name, peer.Addr.String())
-
-					// error only indicates that the peer already exists
-					_ = c.AddPeer(&peer)
+					// error only indicates a duplicate
+					if err := c.AddPeer(&peer); err == nil {
+						fmt.Printf("discovered %s at %s\n", peer.Name, peer.Addr.String())
+					}
 
 				case <-ctx.Done():
 					return

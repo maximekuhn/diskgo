@@ -2,8 +2,8 @@
 
 TODO:
 - [x] basic CI (fmt, lint, build, test, ...)
-- [ ] mdns discovery for client
-- [ ] mdns announce for server
+- [x] mdns discovery for client
+- [x] mdns announce for server
 - [ ] timeout handling (using contexts ?)
 - [x] disk file storage (instead of in memory)
 - [x] server configuration (max disk space provided, store directory)
@@ -12,10 +12,11 @@ TODO:
   - [ ] replicas
 - [ ] docs
 - [ ] optimisations (allocations, buffers, ...)
-- [ ] provide more errors from server to clients when an operation fails
+- [x] provide more errors from server to clients when an operation fails
 - [ ] handle big files (not fitting in RAM)
 - [ ] protocol version
 - [ ] handle server restart (retrieve root dir's current size, ...)
+- [ ] handle client restart (retrieve where files are, ...)
 
 Future ideas:
 - [ ] native desktop app for macOS (using SwiftUI and GRPC to interact with Golang)
