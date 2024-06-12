@@ -12,5 +12,6 @@ const (
 
 type Message struct {
 	MsgType MsgType
+	From    string
 	Payload interface{}
 }

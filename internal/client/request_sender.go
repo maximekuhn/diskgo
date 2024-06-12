@@ -9,7 +9,7 @@ import (
 )
 
 func sendRequest(req *protocol.Message, peer *network.Peer) (*protocol.Message, error) {
-	encodedMsg, err := network.Encode(req.MsgType, req.Payload)
+	encodedMsg, err := network.Encode(*req)
 	if err != nil {
 		return nil, err
 	}

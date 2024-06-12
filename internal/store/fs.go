@@ -10,7 +10,7 @@ import (
 	"github.com/maximekuhn/diskgo/internal/file"
 )
 
-// File store that uses the filesystem
+// FsFileStore File store that uses the filesystem
 //
 // All files from remote peers are stored within the provided rootDir
 type FsFileStore struct {
@@ -23,15 +23,19 @@ func NewFsFileStore(rootDir string) *FsFileStore {
 	}
 }
 
-// save the given file
-func (fs *FsFileStore) Save(f *file.File) error {
-	// TODO: create rootDir and maybe sub dirs, if any
+// Save the given file
+func (fs *FsFileStore) Save(f *file.File, peername string) error {
+	filepath := getPath(fs.rootDir, f.Name, peername)
 
-	path := getPath(fs.rootDir, f.Name)
+	// create file directory if it doesn't exist yet
+	filedir := path.Dir(filepath)
+	if err := os.MkdirAll(filedir, 0750); err != nil {
+		return err
+	}
 
-	fmt.Println("path", path)
+	fmt.Println("filepath", filepath)
 
-	outFile, err := os.Create(path)
+	outFile, err := os.Create(filepath)
 	if err != nil {
 		fmt.Println("err create", err)
 		return err
@@ -47,26 +51,33 @@ func (fs *FsFileStore) Save(f *file.File) error {
 	return nil
 }
 
-// get the given file by name
+// Get the given file by name
 // If the file is not found, an error is returned
-func (fs *FsFileStore) Get(filename string) (*file.File, error) {
-	path := getPath(fs.rootDir, filename)
-	f, err := file.ReadFile(path)
+func (fs *FsFileStore) Get(filename string, peername string) (*file.File, error) {
+	filepath := getPath(fs.rootDir, filename, peername)
+	f, err := file.ReadFile(filepath)
 	if err != nil {
 		return nil, err
 	}
 
-    // change file name to what the client requested (instead of the MD5 hash)
+	// change file name to what the client requested (instead of the MD5 hash)
 	f.Name = filename
 
 	return f, nil
 }
 
-func getPath(rootDir, filename string) string {
+func getPath(rootDir, filename, peername string) string {
+	// get MD5 hash of the filename to avoid needing to sanitaze any filename
 	h := md5.New()
 	io.WriteString(h, filename)
 	hash := h.Sum(nil)
 	hashedFilename := fmt.Sprintf("%x", hash)
 
-	return path.Join(rootDir, hashedFilename)
+	// also use MD5 hash for peer name (same reasons as before)
+	h = md5.New()
+	io.WriteString(h, peername)
+	hash = h.Sum(nil)
+	hashedPeername := fmt.Sprintf("%x", hash)
+
+	return path.Join(rootDir, hashedPeername, hashedFilename)
 }

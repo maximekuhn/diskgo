@@ -12,12 +12,13 @@ import (
 func TestEncodeHeadersMsgType(t *testing.T) {
 	message := protocol.Message{
 		MsgType: protocol.MsgGetFile,
+		From:    "toto",
 		Payload: protocol.GetFileReqPayload{
 			FileName: "passwords.txt",
 		},
 	}
 
-	encodedMsg, err := Encode(message.MsgType, message.Payload)
+	encodedMsg, err := Encode(message)
 	if err != nil {
 		t.Fatalf("error while encoding message: %s", err)
 	}
@@ -32,32 +33,55 @@ func TestEncodeHeadersMsgType(t *testing.T) {
 func TestEncodeHeadersPayloadLength(t *testing.T) {
 	message := protocol.Message{
 		MsgType: protocol.MsgGetFile,
+		From:    "toto",
 		Payload: protocol.GetFileReqPayload{
 			FileName: "passwords.txt",
 		},
 	}
 
-	encodedMsg, err := Encode(message.MsgType, message.Payload)
+	encodedMsg, err := Encode(message)
 	if err != nil {
 		t.Fatalf("error while encoding message: %s", err)
 	}
 
 	expectedPayloadLength := 28
-	actualPayloadLength := binary.BigEndian.Uint32(encodedMsg[1:5])
+	actualPayloadLength := binary.BigEndian.Uint32(encodedMsg[5:9])
 	if expectedPayloadLength != int(actualPayloadLength) {
 		t.Fatalf("payload length: got %d want %d", actualPayloadLength, expectedPayloadLength)
+	}
+}
+
+func TestEncodeHeadersSendersNicknameLength(t *testing.T) {
+	message := protocol.Message{
+		MsgType: protocol.MsgGetFile,
+		From:    "toto",
+		Payload: protocol.GetFileReqPayload{
+			FileName: "passwords.txt",
+		},
+	}
+
+	encodedMsg, err := Encode(message)
+	if err != nil {
+		t.Fatalf("error while encoding message: %s", err)
+	}
+
+	expectedSendersNicknameLength := 4
+	actualSendersNicknameLength := binary.BigEndian.Uint32(encodedMsg[1:5])
+	if expectedSendersNicknameLength != int(actualSendersNicknameLength) {
+		t.Fatalf("senders nickname length: got %d want %d", actualSendersNicknameLength, expectedSendersNicknameLength)
 	}
 }
 
 func TestEncodePayload(t *testing.T) {
 	message := protocol.Message{
 		MsgType: protocol.MsgGetFile,
+		From:    "toto",
 		Payload: protocol.GetFileReqPayload{
 			FileName: "passwords.txt",
 		},
 	}
 
-	encodedMsg, err := Encode(message.MsgType, message.Payload)
+	encodedMsg, err := Encode(message)
 	if err != nil {
 		t.Fatalf("error while encoding message: %s", err)
 	}
@@ -66,8 +90,10 @@ func TestEncodePayload(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error while marshalling payload: %s", err)
 	}
+	expectedPayload = append([]byte(message.From), expectedPayload...)
 
-	actualPayload := encodedMsg[5:]
+	payloadStartIdx := 9
+	actualPayload := encodedMsg[payloadStartIdx:]
 	if !bytes.Equal(actualPayload, expectedPayload) {
 		t.Fatalf("payload: got %v want %v", actualPayload, expectedPayload)
 	}
@@ -76,17 +102,18 @@ func TestEncodePayload(t *testing.T) {
 func TestEncodeFull(t *testing.T) {
 	message := protocol.Message{
 		MsgType: protocol.MsgGetFile,
+		From:    "toto",
 		Payload: protocol.GetFileReqPayload{
 			FileName: "passwords.txt",
 		},
 	}
 
-	encodedMsg, err := Encode(message.MsgType, message.Payload)
+	encodedMsg, err := Encode(message)
 	if err != nil {
 		t.Fatalf("error while encoding message: %s", err)
 	}
 
-	expectedMsg := []byte{0, 0, 0, 0, 28, 123, 34, 70, 105, 108, 101, 78, 97, 109, 101, 34, 58, 34, 112, 97, 115, 115, 119, 111, 114, 100, 115, 46, 116, 120, 116, 34, 125}
+	expectedMsg := []byte{0, 0, 0, 0, 4, 0, 0, 0, 28, 116, 111, 116, 111, 123, 34, 70, 105, 108, 101, 78, 97, 109, 101, 34, 58, 34, 112, 97, 115, 115, 119, 111, 114, 100, 115, 46, 116, 120, 116, 34, 125}
 
 	if !bytes.Equal(encodedMsg, expectedMsg) {
 		t.Fatalf("full encoding: got %v want %v", encodedMsg, expectedMsg)

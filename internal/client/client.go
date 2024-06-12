@@ -9,12 +9,14 @@ import (
 )
 
 type Client struct {
-	manager *peersManager
+	manager  *peersManager
+	nickname string
 }
 
-func NewClient() *Client {
+func NewClient(nickname string) *Client {
 	return &Client{
-		manager: newPeersManager(),
+		manager:  newPeersManager(),
+		nickname: nickname,
 	}
 }
 
@@ -37,6 +39,7 @@ func (c *Client) SaveFile(filepath string) error {
 		Payload: protocol.SaveFileReqPayload{
 			File: *f,
 		},
+		From: c.nickname,
 	}
 
 	// await for response
@@ -76,6 +79,7 @@ func (c *Client) GetFile(filename string) (*file.File, error) {
 		Payload: protocol.GetFileReqPayload{
 			FileName: filename,
 		},
+		From: c.nickname,
 	}
 
 	// await response from remote peer

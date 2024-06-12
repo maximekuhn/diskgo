@@ -75,6 +75,8 @@ func (s *Server) handleConn(conn net.Conn) {
 		return
 	}
 
+	slog.Info("received a message", slog.String("nickname", msg.From))
+
 	if msg.MsgType == protocol.MsgGetFile {
 		slog.Info("received a MsgGetFile request")
 

@@ -12,7 +12,7 @@ import (
 func main() {
 	fmt.Println(banner())
 
-	c := client.NewClient()
+	c := client.NewClient("maxime")
 
 	inputCh := make(chan string, 1)
 	go cli.ReadFromStdin(inputCh)

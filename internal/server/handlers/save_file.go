@@ -17,14 +17,20 @@ func HandleSaveFile(msg *protocol.Message, fStore store.FileStore, w io.Writer) 
 		return errors.New("correct message type but unepexted payload type")
 	}
 
-	err := fStore.Save(&req.File)
+	err := fStore.Save(&req.File, msg.From)
 	if err != nil {
-		return writeResponse(protocol.MsgSaveFileRes, protocol.SaveFileResPayload{
-			Ok: false,
-		}, w)
+		res := protocol.Message{
+			MsgType: protocol.MsgSaveFileRes,
+			From:    "todo",
+			Payload: protocol.SaveFileResPayload{Ok: false},
+		}
+		return writeResponse(res, w)
 	}
 
-	return writeResponse(protocol.MsgSaveFileRes, protocol.SaveFileResPayload{
-		Ok: true,
-	}, w)
+	res := protocol.Message{
+		MsgType: protocol.MsgSaveFileRes,
+		From:    "todo",
+		Payload: protocol.SaveFileResPayload{Ok: true},
+	}
+	return writeResponse(res, w)
 }

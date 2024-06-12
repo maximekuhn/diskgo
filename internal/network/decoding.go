@@ -10,15 +10,15 @@ import (
 	"github.com/maximekuhn/diskgo/internal/protocol"
 )
 
-// decode the incoming data (from the network) into a protocol message
+// Decode the incoming data (from the network) into a protocol message
 func Decode(r io.Reader) (*protocol.Message, error) {
-	// read headers (1 byte for msg type, 4 bytes for payload length)
-	headersBuf := make([]byte, 5)
+	// read headers (1 byte for msg type, 4 bytes for sender nickname length, 4 bytes for payload length)
+	headersBuf := make([]byte, 9)
 	n, err := r.Read(headersBuf)
 	if err != nil {
 		return nil, err
 	}
-	if n != 5 {
+	if n != 9 {
 		return nil, errors.New("did not read enough bytes")
 	}
 
@@ -28,8 +28,20 @@ func Decode(r io.Reader) (*protocol.Message, error) {
 		return nil, errors.New("unknown message type")
 	}
 
+	// read senders nickname
+	sendersNickNameLength := binary.BigEndian.Uint32(headersBuf[1:5])
+	sendersNickNameBuf := make([]byte, sendersNickNameLength)
+	n, err = r.Read(sendersNickNameBuf)
+	if err != nil {
+		return nil, err
+	}
+	if n != int(sendersNickNameLength) {
+		return nil, errors.New("did not read enough bytes")
+	}
+	sendersNickname := string(sendersNickNameBuf[:n])
+
 	// read payload
-	payloadLength := binary.BigEndian.Uint32(headersBuf[1:])
+	payloadLength := binary.BigEndian.Uint32(headersBuf[5:])
 	payloadBuf := make([]byte, payloadLength)
 	n, err = r.Read(payloadBuf)
 	if err != nil {
@@ -53,6 +65,7 @@ func Decode(r io.Reader) (*protocol.Message, error) {
 
 		return &protocol.Message{
 			MsgType: protocolMsgType,
+			From:    sendersNickname,
 			Payload: pload,
 		}, nil
 	}
@@ -67,6 +80,7 @@ func Decode(r io.Reader) (*protocol.Message, error) {
 
 		return &protocol.Message{
 			MsgType: protocolMsgType,
+			From:    sendersNickname,
 			Payload: pload,
 		}, nil
 	}
@@ -81,6 +95,7 @@ func Decode(r io.Reader) (*protocol.Message, error) {
 
 		return &protocol.Message{
 			MsgType: protocolMsgType,
+			From:    sendersNickname,
 			Payload: pload,
 		}, nil
 	}
@@ -95,6 +110,7 @@ func Decode(r io.Reader) (*protocol.Message, error) {
 
 		return &protocol.Message{
 			MsgType: protocolMsgType,
+			From:    sendersNickname,
 			Payload: pload,
 		}, nil
 	}

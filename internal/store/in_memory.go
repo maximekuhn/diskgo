@@ -6,7 +6,9 @@ import (
 	"github.com/maximekuhn/diskgo/internal/file"
 )
 
-// A dummy implementation of FileStore that saves all files in memory
+// TODO: use peer name
+
+// InMemoryFileStore is a dummy implementation of FileStore that saves all files in memory
 // This implementation is thread safe
 type InMemoryFileStore struct {
 	mu    sync.Mutex
@@ -20,8 +22,8 @@ func NewInMemoryFileStore() *InMemoryFileStore {
 	}
 }
 
-// save the given file
-func (in *InMemoryFileStore) Save(f *file.File) error {
+// Save the given file
+func (in *InMemoryFileStore) Save(f *file.File, _ string) error {
 	in.mu.Lock()
 	defer in.mu.Unlock()
 
@@ -30,9 +32,9 @@ func (in *InMemoryFileStore) Save(f *file.File) error {
 	return nil
 }
 
-// get the given file by name
+// Get the given file by name
 // If the file is not found, an error is returned
-func (in *InMemoryFileStore) Get(filename string) (*file.File, error) {
+func (in *InMemoryFileStore) Get(filename string, _ string) (*file.File, error) {
 	in.mu.Lock()
 	defer in.mu.Unlock()
 

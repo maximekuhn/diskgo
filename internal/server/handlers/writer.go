@@ -7,8 +7,8 @@ import (
 	"github.com/maximekuhn/diskgo/internal/protocol"
 )
 
-func writeResponse(msgType protocol.MsgType, payload interface{}, w io.Writer) error {
-	encodedMsg, err := network.Encode(msgType, payload)
+func writeResponse(res protocol.Message, w io.Writer) error {
+	encodedMsg, err := network.Encode(res)
 	if err != nil {
 		return err
 	}

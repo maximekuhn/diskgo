@@ -19,22 +19,30 @@ func HandleGetFile(msg *protocol.Message, fStore store.FileStore, w io.Writer) e
 		return errors.New("correct message type but incorrect payload")
 	}
 
-	f, err := fStore.Get(req.FileName)
+	f, err := fStore.Get(req.FileName, msg.From)
 	if err != nil {
 		if errors.Is(err, store.ErrFileNotFound) {
-			res := protocol.GetFileResPayload{
-				Ok:   false,
-				File: file.File{},
+			res := protocol.Message{
+				MsgType: protocol.MsgGetFileRes,
+				From:    "todo",
+				Payload: protocol.GetFileResPayload{
+					Ok:   false,
+					File: file.File{},
+				},
 			}
-			return writeResponse(protocol.MsgGetFileRes, res, w)
+			return writeResponse(res, w)
 		}
 
 		return err
 	}
 
-	res := protocol.GetFileResPayload{
-		Ok:   true,
-		File: *f,
+	res := protocol.Message{
+		MsgType: protocol.MsgGetFileRes,
+		From:    "todo",
+		Payload: protocol.GetFileResPayload{
+			Ok:   true,
+			File: *f,
+		},
 	}
-	return writeResponse(protocol.MsgGetFileRes, res, w)
+	return writeResponse(res, w)
 }
