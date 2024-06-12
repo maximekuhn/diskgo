@@ -1,9 +1,9 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
-	"github.com/maximekuhn/diskgo/internal/network/discovery"
 	"log/slog"
 	"math/rand"
 	"net"
@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/maximekuhn/diskgo/internal/network/discovery"
 	"github.com/maximekuhn/diskgo/internal/server"
 	"github.com/maximekuhn/diskgo/internal/store"
 )
@@ -81,7 +82,7 @@ func getLanAddr() (net.IP, error) {
 			}
 		}
 	}
-	return nil, nil
+	return nil, errors.New("could not find LAN IP address")
 }
 
 func banner() string {

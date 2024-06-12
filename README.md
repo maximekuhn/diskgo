@@ -17,6 +17,7 @@ TODO:
 - [ ] protocol version
 - [ ] handle server restart (retrieve root dir's current size, ...)
 - [ ] handle client restart (retrieve where files are, ...)
+- [ ] node (combine client and server)
 
 Future ideas:
 - [ ] native desktop app for macOS (using SwiftUI and GRPC to interact with Golang)

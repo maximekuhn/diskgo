@@ -20,7 +20,7 @@ func NewAESFileEncryptor(secretKey []byte) *AESFileEncryptor {
 	return &AESFileEncryptor{secretKey: secretKey, nonces: make(map[string][]byte)}
 }
 
-func (fe AESFileEncryptor) Encrypt(f *file.File) error {
+func (fe *AESFileEncryptor) Encrypt(f *file.File) error {
 	c, err := aes.NewCipher(fe.secretKey)
 	if err != nil {
 		return err
@@ -44,7 +44,7 @@ func (fe AESFileEncryptor) Encrypt(f *file.File) error {
 	return nil
 }
 
-func (fe AESFileEncryptor) Decrypt(f *file.File) error {
+func (fe *AESFileEncryptor) Decrypt(f *file.File) error {
 	nonce, ok := fe.nonces[f.Name]
 	if !ok {
 		return errors.New("no nonce found for file")

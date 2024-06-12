@@ -32,6 +32,10 @@ func (z *ZeroconfResolver) Resolve(ctx context.Context, peers chan<- network.Pee
 		for {
 			select {
 			case entry := <-results:
+				if entry.Service != serviceName || entry.Domain != domain {
+					continue
+				}
+
 				texts := entry.Text
 
 				if len(texts) != 2 {

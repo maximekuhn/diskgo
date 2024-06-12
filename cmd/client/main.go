@@ -86,7 +86,7 @@ func main() {
 			}
 
 			fmt.Println("got file successfully")
-			fmt.Printf("name: %s, data: %v\n", file.Name, file.Data)
+			fmt.Printf("name: %s, data: %s\n", file.Name, string(file.Data))
 		}
 
 		if cmd.CmdType == cli.CmdList {
