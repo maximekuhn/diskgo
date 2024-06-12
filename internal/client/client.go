@@ -1,9 +1,11 @@
 package client
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/maximekuhn/diskgo/internal/encryption"
+	"github.com/maximekuhn/diskgo/internal/network/discovery"
 
 	"github.com/maximekuhn/diskgo/internal/file"
 	"github.com/maximekuhn/diskgo/internal/network"
@@ -15,7 +17,11 @@ type Client struct {
 
 	// can be nil
 	fileEncrypter encryption.FileEncrypter
-	nickname      string
+
+	// can be nil
+	resolver discovery.Resolver
+
+	nickname string
 }
 
 func NewClient(opts ...ClientOpts) *Client {
@@ -33,6 +39,31 @@ func NewClient(opts ...ClientOpts) *Client {
 	}
 
 	return c
+}
+
+func (c *Client) Start(ctx context.Context) error {
+	peers := make(chan network.Peer)
+	if c.resolver != nil {
+		// TODO: handle error
+		go c.resolver.Resolve(ctx, peers)
+
+		go func(ctx context.Context, c *Client) {
+			for {
+				select {
+				case peer := <-peers:
+					fmt.Printf("discovered %s at %s\n", peer.Name, peer.Addr.String())
+
+					// error only indicates that the peer already exists
+					_ = c.AddPeer(&peer)
+
+				case <-ctx.Done():
+					return
+				}
+			}
+		}(ctx, c)
+	}
+
+	return nil
 }
 
 func (c *Client) SaveFile(filepath string) error {

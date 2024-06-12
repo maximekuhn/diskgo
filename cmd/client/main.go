@@ -1,13 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/maximekuhn/diskgo/internal/encryption"
-	"net/netip"
-
 	"github.com/maximekuhn/diskgo/cmd/client/cli"
 	"github.com/maximekuhn/diskgo/internal/client"
+	"github.com/maximekuhn/diskgo/internal/encryption"
 	"github.com/maximekuhn/diskgo/internal/network"
+	"github.com/maximekuhn/diskgo/internal/network/discovery"
+	"net/netip"
 )
 
 func main() {
@@ -16,7 +17,16 @@ func main() {
 	c := client.NewClient(
 		client.WithNickName("maxime"),
 		client.WithFileEncrypter(encryption.NewAESFileEncryptor([]byte("i5yrqDhVmvV9YpFBwexikVXYFtC4emd9"))),
+		client.WithResolver(discovery.NewZeroconfResolver()),
 	)
+
+	// start peers discovery
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	err := c.Start(ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	inputCh := make(chan string, 1)
 	go cli.ReadFromStdin(inputCh)

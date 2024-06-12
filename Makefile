@@ -18,7 +18,7 @@ lint:
 	golangci-lint run
 
 test:
-	go test -v ./...
+	go test -tags=integration -v ./...
 
 help:
 	@echo "Available targets"

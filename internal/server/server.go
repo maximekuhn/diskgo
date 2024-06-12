@@ -1,20 +1,24 @@
 package server
 
 import (
+	"context"
 	"fmt"
-	"log/slog"
-	"net"
-
 	"github.com/maximekuhn/diskgo/internal/network"
+	"github.com/maximekuhn/diskgo/internal/network/discovery"
 	"github.com/maximekuhn/diskgo/internal/protocol"
 	"github.com/maximekuhn/diskgo/internal/server/handlers"
 	"github.com/maximekuhn/diskgo/internal/store"
+	"log/slog"
+	"net"
 )
 
 type Server struct {
 	addr  net.IP
 	port  uint16
 	store store.FileStore
+
+	// can be nil
+	advertiser discovery.Advertiser
 }
 
 func NewServer(opts ...ServerOpts) *Server {
@@ -40,6 +44,13 @@ func (s *Server) Start(stopCh <-chan bool) error {
 	}
 
 	slog.Info("server started", slog.String("listen_addr", l.Addr().String()))
+
+	if s.advertiser != nil {
+		ctx := context.Background()
+
+		// TODO: handle error
+		go s.advertiser.Advertise(ctx)
+	}
 
 	s.mainLoop(l, stopCh)
 

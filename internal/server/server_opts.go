@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/maximekuhn/diskgo/internal/network/discovery"
 	"net"
 
 	"github.com/maximekuhn/diskgo/internal/store"
@@ -26,10 +27,17 @@ func WithFileStore(store store.FileStore) ServerOpts {
 	}
 }
 
+func WithAdvertiser(advertiser discovery.Advertiser) ServerOpts {
+	return func(s *Server) {
+		s.advertiser = advertiser
+	}
+}
+
 func DefaultServerOpts() []ServerOpts {
 	return []ServerOpts{
 		WithListenAddr(net.IPv4(127, 0, 0, 1)),
 		WithListenPort(9292),
 		WithFileStore(store.NewInMemoryFileStore()),
+		WithAdvertiser(nil),
 	}
 }
