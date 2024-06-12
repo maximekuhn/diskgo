@@ -77,6 +77,10 @@ func (fs *FsFileStore) Get(filename string, peername string) (*file.File, error)
 }
 
 func (fs *FsFileStore) hasEnoughDiskSpace(f *file.File) bool {
+	if fs.maxSizeKB == 0 {
+		return true
+	}
+
 	if fs.currentSizeKB >= fs.maxSizeKB {
 		return false
 	}
@@ -85,7 +89,7 @@ func (fs *FsFileStore) hasEnoughDiskSpace(f *file.File) bool {
 	currentSizeBytes := fs.currentSizeKB * 1024
 	maxSizeBytes := fs.maxSizeKB * 1024
 
-	return currentSizeBytes+fileSizeBytes > maxSizeBytes
+	return currentSizeBytes+fileSizeBytes <= maxSizeBytes
 }
 
 func getPath(rootDir, filename, peername string) string {
