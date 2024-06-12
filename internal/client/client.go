@@ -2,6 +2,7 @@ package client
 
 import (
 	"errors"
+	"fmt"
 	"github.com/maximekuhn/diskgo/internal/encryption"
 
 	"github.com/maximekuhn/diskgo/internal/file"
@@ -77,7 +78,7 @@ func (c *Client) SaveFile(filepath string) error {
 	// maybe check the payload cast (should be done by encoding/decoding)
 	payload := res.Payload.(protocol.SaveFileResPayload)
 	if !payload.Ok {
-		return errors.New("peer failed to save the file")
+		return fmt.Errorf("peer failed to save the file '%s'", payload.Reason)
 	}
 
 	c.manager.addFilePeerStorage(f.Name, peer)

@@ -14,6 +14,8 @@ TODO:
 - [ ] optimisations (allocations, buffers, ...)
 - [ ] provide more errors from server to clients when an operation fails
 - [ ] handle big files (not fitting in RAM)
+- [ ] protocol version
+- [ ] handle server restart (retrieve root dir's current size, ...)
 
 Future ideas:
 - [ ] native desktop app for macOS (using SwiftUI and GRPC to interact with Golang)

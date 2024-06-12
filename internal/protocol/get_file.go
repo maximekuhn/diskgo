@@ -6,7 +6,9 @@ type GetFileReqPayload struct {
 	FileName string
 }
 
-// if Ok is true, then the file is present
+// GetFileResPayload
+//
+// Ok is set to true if the file has been found
 type GetFileResPayload struct {
 	Ok   bool
 	File file.File

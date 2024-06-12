@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path"
 
@@ -57,6 +58,10 @@ func (fs *FsFileStore) Save(f *file.File, peername string) error {
 		fmt.Println("err write", err)
 		return err
 	}
+
+	fileSizeKb := int64(math.Ceil(float64(len(f.Data)) / 1024.0))
+	fs.currentSizeKB += fileSizeKb
+	fmt.Printf("current size (KB): %d\n", fs.currentSizeKB)
 
 	return nil
 }
