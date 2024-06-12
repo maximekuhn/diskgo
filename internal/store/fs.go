@@ -85,23 +85,25 @@ func (fs *FsFileStore) hasEnoughDiskSpace(f *file.File) bool {
 	currentSizeBytes := fs.currentSizeKB * 1024
 	maxSizeBytes := fs.maxSizeKB * 1024
 
-	if currentSizeBytes+fileSizeBytes > maxSizeBytes {
-		return false
-	}
-
-	return true
+	return currentSizeBytes+fileSizeBytes > maxSizeBytes
 }
 
 func getPath(rootDir, filename, peername string) string {
 	// get MD5 hash of the filename to avoid needing to sanitaze any filename
 	h := md5.New()
-	io.WriteString(h, filename)
+	_, err := io.WriteString(h, filename)
+	if err != nil {
+		panic(err)
+	}
 	hash := h.Sum(nil)
 	hashedFilename := fmt.Sprintf("%x", hash)
 
 	// also use MD5 hash for peer name (same reasons as before)
 	h = md5.New()
-	io.WriteString(h, peername)
+	_, err = io.WriteString(h, peername)
+	if err != nil {
+		panic(err)
+	}
 	hash = h.Sum(nil)
 	hashedPeername := fmt.Sprintf("%x", hash)
 
