@@ -5,10 +5,11 @@ TODO:
 - [ ] mdns discovery for client
 - [ ] mdns announce for server
 - [ ] timeout handling (using contexts ?)
-- [ ] disk file storage (instead of in memory)
+- [x] disk file storage (instead of in memory)
 - [ ] server configuration (max disk space provided, store directory)
 - [ ] client configuration (encryption, replicas)
-- [ ] more "security" (send peer name when performing requests, ...)
+  - [x] encryption
+  - [ ] replicas
 - [ ] docs
 - [ ] optimisations (allocations, buffers, ...)
 - [ ] provide more errors from server to clients when an operation fails

@@ -2,6 +2,7 @@ package client
 
 import (
 	"errors"
+	"github.com/maximekuhn/diskgo/internal/encryption"
 
 	"github.com/maximekuhn/diskgo/internal/file"
 	"github.com/maximekuhn/diskgo/internal/network"
@@ -9,15 +10,28 @@ import (
 )
 
 type Client struct {
-	manager  *peersManager
-	nickname string
+	manager *peersManager
+
+	// can be nil
+	fileEncrypter encryption.FileEncrypter
+	nickname      string
 }
 
-func NewClient(nickname string) *Client {
-	return &Client{
-		manager:  newPeersManager(),
-		nickname: nickname,
+func NewClient(opts ...ClientOpts) *Client {
+	// create client with default opts
+	c := &Client{
+		manager: newPeersManager(),
 	}
+	for _, opt := range DefaultClientOpts() {
+		opt(c)
+	}
+
+	// apply provided opts
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	return c
 }
 
 func (c *Client) SaveFile(filepath string) error {
@@ -31,6 +45,14 @@ func (c *Client) SaveFile(filepath string) error {
 	f, err := file.ReadFile(filepath)
 	if err != nil {
 		return err
+	}
+
+	// check if encryption is required
+	if c.fileEncrypter != nil {
+		err = c.fileEncrypter.Encrypt(f)
+		if err != nil {
+			return err
+		}
 	}
 
 	// send the request
@@ -97,7 +119,17 @@ func (c *Client) GetFile(filename string) (*file.File, error) {
 		return nil, errors.New("failed to get file from peer")
 	}
 
-	return &payload.File, nil
+	f := &payload.File
+
+	// check if we need to decrypt the file
+	if c.fileEncrypter != nil {
+		err = c.fileEncrypter.Decrypt(f)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return f, nil
 }
 
 func (c *Client) ListFiles() map[string][]string {

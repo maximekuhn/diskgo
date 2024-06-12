@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/maximekuhn/diskgo/internal/encryption"
 	"net/netip"
 
 	"github.com/maximekuhn/diskgo/cmd/client/cli"
@@ -12,7 +13,10 @@ import (
 func main() {
 	fmt.Println(banner())
 
-	c := client.NewClient("maxime")
+	c := client.NewClient(
+		client.WithNickName("maxime"),
+		client.WithFileEncrypter(encryption.NewAESFileEncryptor([]byte("i5yrqDhVmvV9YpFBwexikVXYFtC4emd9"))),
+	)
 
 	inputCh := make(chan string, 1)
 	go cli.ReadFromStdin(inputCh)
