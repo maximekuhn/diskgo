@@ -14,18 +14,28 @@ import (
 //
 // All files from remote peers are stored within the provided rootDir
 type FsFileStore struct {
-	rootDir string
+	rootDir       string
+	maxSizeKB     int64
+	currentSizeKB int64
 }
 
-func NewFsFileStore(rootDir string) *FsFileStore {
+// NewFsFileStore creates a new file system storage with a maximum disk capacity indicated by maxSizeKB. If it's set to 0,
+// then no limits are applied.
+func NewFsFileStore(rootDir string, maxSizeKB int64) *FsFileStore {
 	return &FsFileStore{
-		rootDir: rootDir,
+		rootDir:       rootDir,
+		maxSizeKB:     maxSizeKB,
+		currentSizeKB: 0,
 	}
 }
 
 // Save the given file
 func (fs *FsFileStore) Save(f *file.File, peername string) error {
 	filepath := getPath(fs.rootDir, f.Name, peername)
+
+	if !fs.hasEnoughDiskSpace(f) {
+		return ErrNoMoreDiskSpace
+	}
 
 	// create file directory if it doesn't exist yet
 	filedir := path.Dir(filepath)
@@ -64,6 +74,22 @@ func (fs *FsFileStore) Get(filename string, peername string) (*file.File, error)
 	f.Name = filename
 
 	return f, nil
+}
+
+func (fs *FsFileStore) hasEnoughDiskSpace(f *file.File) bool {
+	if fs.currentSizeKB >= fs.maxSizeKB {
+		return false
+	}
+
+	fileSizeBytes := int64(len(f.Data))
+	currentSizeBytes := fs.currentSizeKB * 1024
+	maxSizeBytes := fs.maxSizeKB * 1024
+
+	if currentSizeBytes+fileSizeBytes > maxSizeBytes {
+		return false
+	}
+
+	return true
 }
 
 func getPath(rootDir, filename, peername string) string {

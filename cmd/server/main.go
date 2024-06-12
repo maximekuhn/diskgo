@@ -27,7 +27,7 @@ func main() {
 	s := server.NewServer(
 		server.WithListenPort(uint16(*port)),
 		server.WithListenAddr(net.IPv4(0, 0, 0, 0)),
-		server.WithFileStore(store.NewFsFileStore("./files")),
+		server.WithFileStore(store.NewFsFileStore("./files", 0)),
 	)
 
 	stopCh := make(chan bool, 1)

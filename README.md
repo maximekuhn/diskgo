@@ -6,7 +6,7 @@ TODO:
 - [ ] mdns announce for server
 - [ ] timeout handling (using contexts ?)
 - [x] disk file storage (instead of in memory)
-- [ ] server configuration (max disk space provided, store directory)
+- [x] server configuration (max disk space provided, store directory)
 - [ ] client configuration (encryption, replicas)
   - [x] encryption
   - [ ] replicas

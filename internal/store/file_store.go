@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	ErrFileNotFound = errors.New("file not found")
+	ErrFileNotFound    = errors.New("file not found")
+	ErrNoMoreDiskSpace = errors.New("no more disk space")
 )
 
 type FileStore interface {
