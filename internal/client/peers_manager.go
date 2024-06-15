@@ -10,10 +10,10 @@ import (
 // XXX: maybe make this thread safe
 
 type peersManager struct {
-	// peer name -> peer
+	// peer Name -> peer
 	knownPeers map[string]*network.Peer
 
-	// filename -> peer name
+	// Filename -> peer Name
 	files map[string][]string
 }
 
@@ -26,7 +26,7 @@ func newPeersManager() *peersManager {
 
 // add the given peer
 //
-// if a peer with the same name already exists, an error is returned and the peer isn't added
+// if a peer with the same Name already exists, an error is returned and the peer isn't added
 func (m *peersManager) addPeer(peer *network.Peer) error {
 	p, ok := m.knownPeers[peer.Name]
 	if !ok {
@@ -35,7 +35,7 @@ func (m *peersManager) addPeer(peer *network.Peer) error {
 	}
 
 	if p != nil {
-		return errors.New("peer with same name already exists")
+		return errors.New("peer with same Name already exists")
 	}
 
 	m.knownPeers[peer.Name] = peer
@@ -44,7 +44,7 @@ func (m *peersManager) addPeer(peer *network.Peer) error {
 
 // return a random peer
 //
-// if there are no peers, an error is returned
+// if there are no Peers, an error is returned
 //
 // Warning: a pointer is returned but a copy is made, so changing
 // the pointer outside of this function won't do anything
@@ -56,7 +56,7 @@ func (m *peersManager) getRandomPeer() (*network.Peer, error) {
 
 	peersCount := len(peers)
 	if peersCount == 0 {
-		return nil, errors.New("no peers")
+		return nil, errors.New("no Peers")
 	}
 
 	idx := rand.Intn(peersCount)
@@ -65,7 +65,7 @@ func (m *peersManager) getRandomPeer() (*network.Peer, error) {
 	return &p, nil
 }
 
-// add a new peer as a storage for the given filename
+// add a new peer as a storage for the given Filename
 func (m *peersManager) addFilePeerStorage(filename string, peer *network.Peer) {
 	ps, ok := m.files[filename]
 	if !ok {
@@ -76,7 +76,7 @@ func (m *peersManager) addFilePeerStorage(filename string, peer *network.Peer) {
 	m.files[filename] = ps
 }
 
-// get a peer storing the given filename
+// get a peer storing the given Filename
 //
 // if there is no peer, an error is returned
 func (m *peersManager) getPeerStoringFile(filename string) (*network.Peer, error) {

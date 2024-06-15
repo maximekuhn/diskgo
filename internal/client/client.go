@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/maximekuhn/diskgo/internal/encryption"
 	"github.com/maximekuhn/diskgo/internal/network/discovery"
+	"net/netip"
 
 	"github.com/maximekuhn/diskgo/internal/file"
 	"github.com/maximekuhn/diskgo/internal/network"
@@ -21,7 +22,8 @@ type Client struct {
 	// can be nil
 	resolver discovery.Resolver
 
-	nickname string
+	nickname         string
+	stateStoragePath string
 }
 
 func NewClient(opts ...ClientOpts) *Client {
@@ -37,7 +39,6 @@ func NewClient(opts ...ClientOpts) *Client {
 	for _, opt := range opts {
 		opt(c)
 	}
-
 	return c
 }
 
@@ -115,6 +116,14 @@ func (c *Client) SaveFile(filepath string) error {
 
 	c.manager.addFilePeerStorage(f.Name, peer)
 
+	// snapshot client's state and save it (to disk)
+	if c.stateStoragePath != "" {
+		err = c.snapshot()
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -180,4 +189,74 @@ func (c *Client) ListPeers() []network.Peer {
 		peers = append(peers, *peer)
 	}
 	return peers
+}
+
+func (c *Client) snapshot() error {
+	peers := c.ListPeers()
+	statePeers := make([]statePeer, 0)
+	for _, peer := range peers {
+		statePeers = append(statePeers, statePeer{
+			Name: peer.Name,
+			Addr: peer.Addr.String(),
+		})
+	}
+
+	files := c.ListFiles()
+	stateFiles := make([]stateFile, 0)
+	for filename, peernames := range files {
+		for _, peername := range peernames {
+			stateFiles = append(stateFiles, stateFile{
+				Filename: filename,
+				Peername: peername,
+			})
+		}
+	}
+
+	m := &Memento{
+		clientState: state{
+			Peers: statePeers,
+			Files: stateFiles,
+		},
+		writeFilePath: c.stateStoragePath,
+	}
+
+	return m.WriteToDisk()
+}
+
+func (c *Client) Restore() error {
+	m := NewMemento(c.stateStoragePath)
+	state, err := m.ReadFromDisk()
+	if err != nil {
+		return err
+	}
+
+	peers := state.Peers
+	for _, peer := range peers {
+		peerName := peer.Name
+		peerAdrr, err := netip.ParseAddrPort(peer.Addr)
+		if err != nil {
+			return err
+		}
+
+		peer := network.NewPeer(peerName, peerAdrr)
+		err = c.manager.addPeer(peer)
+		if err != nil {
+			return err
+		}
+	}
+
+	files := state.Files
+	for _, file := range files {
+		peerName := file.Peername
+		fileName := file.Filename
+
+		// FIXME: manager only use the peer's Name but that's not correct to do so (even if it works)
+		peer := &network.Peer{
+			Name: peerName,
+		}
+
+		c.manager.addFilePeerStorage(fileName, peer)
+	}
+
+	return nil
 }

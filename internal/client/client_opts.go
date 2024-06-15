@@ -27,12 +27,22 @@ func WithResolver(resolver discovery.Resolver) ClientOpts {
 	}
 }
 
+// WithStateStoragePath determines where the client's state is saved to be restored across client restart(s)
+//
+// Set it to an empty for non-persistent state
+func WithStateStoragePath(stateStoragePath string) ClientOpts {
+	return func(c *Client) {
+		c.stateStoragePath = stateStoragePath
+	}
+}
+
 func DefaultClientOpts() []ClientOpts {
 	// random nickname, not recommended
 	randomNickname := fmt.Sprintf("user-%d", rand.Intn(100))
 	return []ClientOpts{
-		WithFileEncrypter(nil),
-		WithNickName(randomNickname),
-		WithResolver(nil),
+		WithFileEncrypter(nil),       // no encryption
+		WithNickName(randomNickname), // use a random nickname
+		WithResolver(nil),            // not automatic resolver
+		WithStateStoragePath(""),     // non-persistent state
 	}
 }

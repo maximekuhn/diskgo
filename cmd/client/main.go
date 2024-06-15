@@ -18,12 +18,21 @@ func main() {
 		client.WithNickName("maxime"),
 		client.WithFileEncrypter(encryption.NewAESFileEncryptor([]byte("i5yrqDhVmvV9YpFBwexikVXYFtC4emd9"))),
 		client.WithResolver(discovery.NewZeroconfResolver()),
+		client.WithStateStoragePath("./files/client_state.json"),
 	)
+
+	// try to restore previous state, if any
+	err := c.Restore()
+	if err != nil {
+		fmt.Printf("could not restore previous state: %s\n", err)
+	} else {
+		fmt.Println("successfully restored previous state")
+	}
 
 	// start peers discovery
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	err := c.StartDiscovery(ctx)
+	err = c.StartDiscovery(ctx)
 	if err != nil {
 		panic(err)
 	}
