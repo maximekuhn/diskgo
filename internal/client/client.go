@@ -122,10 +122,10 @@ func (c *Client) AddPeer(p *network.Peer) error {
 	return c.manager.addPeer(p)
 }
 
-func (c *Client) GetFile(filename string) (*file.File, error) {
+func (c *Client) GetFile(filename string) error {
 	peer, err := c.manager.getPeerStoringFile(filename)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// send the request
@@ -140,16 +140,16 @@ func (c *Client) GetFile(filename string) (*file.File, error) {
 	// await response from remote peer
 	res, err := sendRequest(&req, peer)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if res.MsgType != protocol.MsgGetFileRes {
-		return nil, errors.New("got a response but not the one expected")
+		return errors.New("got a response but not the one expected")
 	}
 
 	payload := res.Payload.(protocol.GetFileResPayload)
 	if !payload.Ok {
-		return nil, errors.New("failed to get file from peer")
+		return errors.New("failed to get file from peer")
 	}
 
 	f := &payload.File
@@ -158,11 +158,16 @@ func (c *Client) GetFile(filename string) (*file.File, error) {
 	if c.fileEncrypter != nil {
 		err = c.fileEncrypter.Decrypt(f)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return f, nil
+	// save the file on disk
+	if err = file.WriteFile(f); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Client) ListFiles() map[string][]string {

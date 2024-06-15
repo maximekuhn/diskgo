@@ -79,14 +79,12 @@ func main() {
 
 		if cmd.CmdType == cli.CmdGetFile {
 			payload := cmd.Payload.(cli.PayloadGetFile)
-			file, err := c.GetFile(payload.FileName)
+			err := c.GetFile(payload.FileName)
 			if err != nil {
 				fmt.Printf("failed to get file: %s\n", err)
 				continue
 			}
-
 			fmt.Println("got file successfully")
-			fmt.Printf("name: %s, data: %s\n", file.Name, string(file.Data))
 		}
 
 		if cmd.CmdType == cli.CmdList {

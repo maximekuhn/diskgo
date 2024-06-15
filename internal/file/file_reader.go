@@ -1,6 +1,9 @@
 package file
 
-import "os"
+import (
+	"os"
+	"path/filepath"
+)
 
 func ReadFile(path string) (*File, error) {
 	data, err := os.ReadFile(path)
@@ -8,8 +11,13 @@ func ReadFile(path string) (*File, error) {
 		return nil, err
 	}
 
-	// for now, name is the path
-	name := path
+	// name of the file is the absolute path
+	absolutePath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
+	name := absolutePath
+
 	f := NewFile(name, data)
 
 	return f, nil
