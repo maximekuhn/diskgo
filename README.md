@@ -16,7 +16,7 @@ TODO:
 - [ ] handle big files (not fitting in RAM)
 - [ ] protocol version
 - [ ] handle server restart (retrieve root dir's current size, ...)
-- [ ] handle client restart (retrieve where files are, ...)
+- [x] handle client restart (retrieve where files are, ...)
 - [ ] node (combine client and server)
 
 Future ideas:
