@@ -45,3 +45,30 @@ func TestAESFileEncryptor_Decrypt(t *testing.T) {
 		t.Fatal("decrypt failed, file's data not updated")
 	}
 }
+
+func TestAESFileDecryptor_SameFileDifferentNonces(t *testing.T) {
+	// encrypt the same file twice with the same secret key
+	// check that the result is different (different nonces should be used)
+	data := []byte("gmail: password1245\nwork: superstrongpassword")
+	f := file.NewFile("passwords.txt", data)
+
+	secretKey := []byte("i5yrqDhVmvV9YpFBwexikVXYFtC4emd9")
+	sut := NewAESFileEncryptor(secretKey)
+
+	err := sut.Encrypt(f)
+	if err != nil {
+		t.Fatalf("encrypt failed: %v", err)
+	}
+	firstTimeData := f.Data
+
+	f = file.NewFile("passwords.txt", data)
+	err = sut.Encrypt(f)
+	if err != nil {
+		t.Fatalf("encrypt failed: %v", err)
+	}
+	secondTimeData := f.Data
+
+	if bytes.Equal(firstTimeData, secondTimeData) {
+		t.Fatal("different nonces should have been used")
+	}
+}
