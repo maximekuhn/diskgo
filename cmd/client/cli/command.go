@@ -11,6 +11,7 @@ const (
 	CmdSaveFile
 	CmdList
 	CmdGetFile
+	CmdListPeers
 )
 
 type Command struct {

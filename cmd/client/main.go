@@ -94,6 +94,13 @@ func main() {
 			}
 		}
 
+		if cmd.CmdType == cli.CmdListPeers {
+			peers := c.ListPeers()
+			for _, peer := range peers {
+				fmt.Printf("%s -> %s\n", peer.Name, peer.Addr)
+			}
+		}
+
 	}
 
 }
@@ -113,6 +120,7 @@ func help() string {
         * save <file path>       - save a file (a random peer will be chosen)
         * get <file name>        - retrieve a file from the peers network
         * ls | list              - list all files saved in the peers network
+        * peers                  - list all known peers
         * add <name> <IP> <port> - manually add a new peer
         * help                   - show this menu
         * quit | exit            - exit

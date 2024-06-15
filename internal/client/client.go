@@ -173,3 +173,11 @@ func (c *Client) GetFile(filename string) error {
 func (c *Client) ListFiles() map[string][]string {
 	return c.manager.files
 }
+
+func (c *Client) ListPeers() []network.Peer {
+	peers := make([]network.Peer, 0)
+	for _, peer := range c.manager.knownPeers {
+		peers = append(peers, *peer)
+	}
+	return peers
+}

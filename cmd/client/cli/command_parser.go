@@ -51,6 +51,10 @@ func ParseCommand(input string) (*Command, error) {
 		return parseCommandGetFile(parts[1:])
 	}
 
+	if cmdLowercase == "peers" {
+		return &Command{CmdType: CmdListPeers, Payload: nil}, nil
+	}
+
 	return nil, fmt.Errorf("unknown command: '%s'", cmd)
 }
 
