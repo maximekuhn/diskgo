@@ -212,7 +212,7 @@ func (c *Client) snapshot() error {
 		}
 	}
 
-	m := &Memento{
+	m := &clientPersistence{
 		clientState: state{
 			Peers: statePeers,
 			Files: stateFiles,
@@ -220,12 +220,12 @@ func (c *Client) snapshot() error {
 		writeFilePath: c.stateStoragePath,
 	}
 
-	return m.WriteToDisk()
+	return m.writeToDisk()
 }
 
 func (c *Client) Restore() error {
-	m := NewMemento(c.stateStoragePath)
-	state, err := m.ReadFromDisk()
+	m := newClientPeristence(c.stateStoragePath)
+	state, err := m.readFromDisk()
 	if err != nil {
 		return err
 	}
@@ -246,9 +246,9 @@ func (c *Client) Restore() error {
 	}
 
 	files := state.Files
-	for _, file := range files {
-		peerName := file.Peername
-		fileName := file.Filename
+	for _, f := range files {
+		peerName := f.Peername
+		fileName := f.Filename
 
 		// FIXME: manager only use the peer's Name but that's not correct to do so (even if it works)
 		peer := &network.Peer{

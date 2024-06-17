@@ -5,15 +5,15 @@ import (
 	"os"
 )
 
-// Memento is a structure allowing to store and restore client's state
+// clientPersistence is a structure allowing to store and restore client's state
 // on the disk.
-type Memento struct {
+type clientPersistence struct {
 	clientState   state
 	writeFilePath string
 }
 
-func NewMemento(writeFilePath string) *Memento {
-	return &Memento{writeFilePath: writeFilePath}
+func newClientPeristence(writeFilePath string) *clientPersistence {
+	return &clientPersistence{writeFilePath: writeFilePath}
 }
 
 // state is the client's state as it's stored on the disk (JSON format)
@@ -32,7 +32,7 @@ type stateFile struct {
 	Peername string `json:"Peername"`
 }
 
-func (m *Memento) WriteToDisk() error {
+func (m *clientPersistence) writeToDisk() error {
 	snapshot, err := json.Marshal(m.clientState)
 	if err != nil {
 		return err
@@ -52,7 +52,7 @@ func (m *Memento) WriteToDisk() error {
 	return nil
 }
 
-func (m *Memento) ReadFromDisk() (*state, error) {
+func (m *clientPersistence) readFromDisk() (*state, error) {
 	data, err := os.ReadFile(m.writeFilePath)
 	if err != nil {
 		return nil, err
