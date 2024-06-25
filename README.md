@@ -9,7 +9,7 @@ TODO:
 - [x] server configuration (max disk space provided, store directory)
 - [ ] client configuration (encryption, replicas)
   - [x] encryption
-  - [ ] replicas
+  - [x] replicas
 - [ ] docs
 - [ ] optimisations (allocations, buffers, ...)
 - [x] provide more errors from server to clients when an operation fails
