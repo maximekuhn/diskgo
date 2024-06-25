@@ -42,29 +42,6 @@ func (m *peersManager) addPeer(peer *network.Peer) error {
 	return nil
 }
 
-// return a random peer
-//
-// if there are no Peers, an error is returned
-//
-// Warning: a pointer is returned but a copy is made, so changing
-// the pointer outside of this function won't do anything
-func (m *peersManager) getRandomPeer() (*network.Peer, error) {
-	peers := make([]network.Peer, 0)
-	for _, p := range m.knownPeers {
-		peers = append(peers, *network.NewPeer(p.Name, p.Addr))
-	}
-
-	peersCount := len(peers)
-	if peersCount == 0 {
-		return nil, errors.New("no Peers")
-	}
-
-	idx := rand.Intn(peersCount)
-	p := peers[idx]
-
-	return &p, nil
-}
-
 // add a new peer as a storage for the given Filename
 func (m *peersManager) addFilePeerStorage(filename string, peer *network.Peer) {
 	ps, ok := m.files[filename]
@@ -99,4 +76,13 @@ func (m *peersManager) getPeerStoringFile(filename string) (*network.Peer, error
 	}
 
 	return peer, nil
+}
+
+// getAllKnownPeers return the list of all currently known peers
+func (m *peersManager) getAllKnownPeers() []*network.Peer {
+	peers := make([]*network.Peer, 0)
+	for _, p := range m.knownPeers {
+		peers = append(peers, p)
+	}
+	return peers
 }

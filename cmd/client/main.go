@@ -3,26 +3,33 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/netip"
+
 	"github.com/maximekuhn/diskgo/cmd/client/cli"
 	"github.com/maximekuhn/diskgo/internal/client"
 	"github.com/maximekuhn/diskgo/internal/encryption"
 	"github.com/maximekuhn/diskgo/internal/network"
 	"github.com/maximekuhn/diskgo/internal/network/discovery"
-	"net/netip"
 )
 
 func main() {
 	fmt.Println(banner())
+
+	replicas, err := client.NewBasicReplicationManager(2)
+	if err != nil {
+		panic(err)
+	}
 
 	c := client.NewClient(
 		client.WithNickName("maxime"),
 		client.WithFileEncrypter(encryption.NewAESFileEncryptor([]byte("i5yrqDhVmvV9YpFBwexikVXYFtC4emd9"))),
 		client.WithResolver(discovery.NewZeroconfResolver()),
 		client.WithStateStoragePath("./files/client_state.json"),
+		client.WithReplicasStrategy(replicas),
 	)
 
 	// try to restore previous state, if any
-	err := c.Restore()
+	err = c.Restore()
 	if err != nil {
 		fmt.Printf("could not restore previous state: %s\n", err)
 	} else {

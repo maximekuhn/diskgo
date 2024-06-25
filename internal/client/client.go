@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/netip"
+
 	"github.com/maximekuhn/diskgo/internal/encryption"
 	"github.com/maximekuhn/diskgo/internal/network/discovery"
-	"net/netip"
 
 	"github.com/maximekuhn/diskgo/internal/file"
 	"github.com/maximekuhn/diskgo/internal/network"
@@ -14,7 +15,8 @@ import (
 )
 
 type Client struct {
-	manager *peersManager
+	manager          *peersManager
+	replicasStrategy ReplicasStrategy
 
 	// can be nil
 	fileEncrypter encryption.FileEncrypter
@@ -69,12 +71,6 @@ func (c *Client) StartDiscovery(ctx context.Context) error {
 }
 
 func (c *Client) SaveFile(filepath string) error {
-	// get a random known peer to save file
-	peer, err := c.manager.getRandomPeer()
-	if err != nil {
-		return err
-	}
-
 	// read the file
 	f, err := file.ReadFile(filepath)
 	if err != nil {
@@ -89,32 +85,11 @@ func (c *Client) SaveFile(filepath string) error {
 		}
 	}
 
-	// send the request
-	req := protocol.Message{
-		MsgType: protocol.MsgSaveFile,
-		Payload: protocol.SaveFileReqPayload{
-			File: *f,
-		},
-		From: c.nickname,
-	}
-
-	// await for response
-	res, err := sendRequest(&req, peer)
+	// save the file according to the provided replication strategy
+	err = c.replicasStrategy.Save(f, c.manager, c.nickname)
 	if err != nil {
 		return err
 	}
-
-	if res.MsgType != protocol.MsgSaveFileRes {
-		return errors.New("got a response but not the one expected")
-	}
-
-	// maybe check the payload cast (should be done by encoding/decoding)
-	payload := res.Payload.(protocol.SaveFileResPayload)
-	if !payload.Ok {
-		return fmt.Errorf("peer failed to save the file '%s'", payload.Reason)
-	}
-
-	c.manager.addFilePeerStorage(f.Name, peer)
 
 	// snapshot client's state and save it (to disk)
 	if c.stateStoragePath != "" {
@@ -147,7 +122,7 @@ func (c *Client) GetFile(filename string) error {
 	}
 
 	// await response from remote peer
-	res, err := sendRequest(&req, peer)
+	res, err := sendRequest(context.TODO(), &req, peer)
 	if err != nil {
 		return err
 	}

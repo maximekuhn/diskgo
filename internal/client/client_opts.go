@@ -2,9 +2,10 @@ package client
 
 import (
 	"fmt"
+	"math/rand"
+
 	"github.com/maximekuhn/diskgo/internal/encryption"
 	"github.com/maximekuhn/diskgo/internal/network/discovery"
-	"math/rand"
 )
 
 type ClientOpts func(*Client)
@@ -36,13 +37,24 @@ func WithStateStoragePath(stateStoragePath string) ClientOpts {
 	}
 }
 
+func WithReplicasStrategy(rs ReplicasStrategy) ClientOpts {
+	return func(c *Client) {
+		c.replicasStrategy = rs
+	}
+}
+
 func DefaultClientOpts() []ClientOpts {
 	// random nickname, not recommended
 	randomNickname := fmt.Sprintf("user-%d", rand.Intn(100))
+	rs, err := NewBasicReplicationManager(1)
+	if err != nil {
+		panic(err)
+	}
 	return []ClientOpts{
 		WithFileEncrypter(nil),       // no encryption
 		WithNickName(randomNickname), // use a random nickname
 		WithResolver(nil),            // not automatic resolver
 		WithStateStoragePath(""),     // non-persistent state
+		WithReplicasStrategy(rs),     // basic replication strategy (1 replica)
 	}
 }
